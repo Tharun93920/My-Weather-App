@@ -4,14 +4,14 @@ body {
     color: #fff; /* White text for contrast */
     display: flex;
     justify-content: center;
-    align-items: center;
+    /* align-items: center; */ /* Remove or comment this out if you want content to start from top on scroll */
     min-height: 100vh; /* Full viewport height */
     margin: 0;
     padding: 20px;
     box-sizing: border-box; /* Include padding in element's total width and height */
     overflow-x: hidden; /* Prevent horizontal scroll on small screens */
     position: relative; /* Needed for absolute positioning of rain effect */
-    overflow: hidden; /* Hide rain drops outside the viewport */
+    /* REMOVED: overflow: hidden; */ /* <--- REMOVE THIS LINE */
 }
 
 .weather-app {
