@@ -1,5 +1,5 @@
 body {
-    font-family: 'Open Sans', sans-serif; /* Using Poppins from Google Fonts */
+    font-family: 'Poppins', sans-serif; /* Using Poppins from Google Fonts */
     background: linear-gradient(135deg, #6a85b6 0%, #bac8e0 100%); /* Softer, more appealing gradient */
     color: #fff; /* White text for contrast */
     display: flex;
