@@ -1,122 +1,471 @@
-// --- Configuration ---
-const API_KEY = '1c26a079deeb9def11e5e94ebb75c960'; // Replace with your OpenWeatherMap API key
-const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'; // Current weather API endpoint
-const ICON_BASE_URL = 'https://openweathermap.org/img/wn/'; // For weather icons
+body {
+    font-family: 'Poppins', sans-serif; /* Using Poppins from Google Fonts */
+    background: linear-gradient(135deg, #6a85b6 0%, #bac8e0 100%); /* Softer, more appealing gradient */
+    color: #fff; /* White text for contrast */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Full viewport height */
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box; /* Include padding in element's total width and height */
+    overflow-x: hidden; /* Prevent horizontal scroll on small screens */
+    position: relative; /* Needed for absolute positioning of rain effect */
+    overflow: hidden; /* Hide rain drops outside the viewport */
+}
 
-// --- DOM Elements ---
-const cityInput = document.getElementById('city-input');
-const searchBtn = document.getElementById('search-btn');
-const weatherDisplay = document.getElementById('weather-display');
-const errorMessage = document.getElementById('error-message');
+.weather-app {
+    background-color: rgba(255, 255, 255, 0.15); /* Slightly less opaque white for a frosted look */
+    padding: 40px 30px; /* Increased padding */
+    border-radius: 20px; /* More rounded corners */
+    text-align: center;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3); /* Stronger, more defined shadow */
+    max-width: 650px; /* Slightly wider max-width to accommodate forecast */
+    width: 100%;
+    backdrop-filter: blur(15px); /* Stronger blur for frosted glass effect */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* More visible border */
+    animation: fadeIn 0.8s ease-out; /* Simple fade-in animation for the app container */
+    z-index: 10; /* Ensure app is above rain effect */
+    position: relative; /* For z-index to work */
+}
 
-// --- Event Listeners ---
-searchBtn.addEventListener('click', () => {
-    const city = cityInput.value.trim(); // .trim() removes leading/trailing whitespace
-    if (city) { // Check if city input is not empty
-        getWeatherData(city);
-    } else {
-        displayError('Please enter a city name.');
+/* Keyframe for fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
-});
-
-// Allow searching by pressing Enter key in the input field
-cityInput.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') {
-        searchBtn.click(); // Simulate a click on the search button
-    }
-});
-
-// --- Functions ---
-
-async function getWeatherData(city) {
-    // Clear previous messages
-    weatherDisplay.innerHTML = ''; // Clear weather data
-    errorMessage.style.display = 'none'; // Hide error message
-    weatherDisplay.classList.remove('weather-info'); // Remove dynamic class if applied
-
-    // Display a loading message
-    weatherDisplay.innerHTML = '<p class="initial-message">Loading weather data...</p>';
-
-    const url = `${BASE_URL}?q=${city}&appid=${API_KEY}&units=metric`; // units=metric for Celsius
-
-    try {
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            // Handle HTTP errors (e.g., 404 for city not found, 401 for invalid API key)
-            if (response.status === 404) {
-                throw new Error('City not found. Please check the spelling.');
-            } else if (response.status === 401) {
-                throw new Error('Invalid API Key. Please check your OpenWeatherMap API key.');
-            } else {
-                throw new Error(`An error occurred: ${response.statusText}`);
-            }
-        }
-
-        const data = await response.json();
-        displayWeatherData(data);
-
-    } catch (error) {
-        console.error('Error fetching weather data:', error);
-        displayError(error.message || 'Failed to fetch weather data. Please try again.');
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-function displayWeatherData(data) {
-    // Hide initial message
-    weatherDisplay.innerHTML = '';
-    errorMessage.style.display = 'none'; // Ensure error is hidden
-
-    // Extract necessary data
-    const cityName = data.name;
-    const temperature = Math.round(data.main.temp); // Round to nearest integer
-    const description = data.weather[0].description;
-    const iconCode = data.weather[0].icon;
-    const humidity = data.main.humidity;
-    const windSpeed = data.wind.speed; // meters/sec by default for metric units
-
-    const iconUrl = `${ICON_BASE_URL}${iconCode}@2x.png`; // @2x for higher resolution icon
-
-    // Create HTML elements to display the data
-    const weatherHtml = `
-        <div class="weather-info">
-            <h2 class="city-name">${cityName}</h2>
-            <img src="${iconUrl}" alt="${description}" class="weather-icon">
-            <p class="temperature">${temperature}°C</p>
-            <p class="description">${description}</p>
-            <div class="details">
-                <div class="detail-item">
-                    <i class="fas fa-tint"></i> Humidity: ${humidity}%
-                </div>
-                <div class="detail-item">
-                    <i class="fas fa-wind"></i> Wind: ${windSpeed} m/s
-                </div>
-            </div>
-        </div>
-    `;
-
-    weatherDisplay.innerHTML = weatherHtml;
+/* Header Styling */
+h1 {
+    margin-bottom: 30px;
+    font-size: 2.8em; /* Larger heading */
+    font-weight: 600; /* Bolder font weight */
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Text shadow for depth */
 }
 
-function displayError(message) {
-    weatherDisplay.innerHTML = ''; // Clear any previous weather info
-    errorMessage.textContent = message;
-    errorMessage.style.display = 'block'; // Show the error message
-    // Optionally, clear the initial message if it's still there
-    const initialMessage = document.querySelector('.initial-message');
-    if (initialMessage) {
-        initialMessage.remove();
+/* Search Box Styling */
+.search-box {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 35px; /* Increased margin */
+    gap: 10px; /* Space between input and button */
+}
+
+#city-input {
+    padding: 14px 20px; /* More padding */
+    border: none;
+    border-radius: 30px; /* More rounded */
+    outline: none;
+    font-size: 1.1em; /* Slightly larger font */
+    width: 70%; /* Responsive width */
+    background-color: rgba(255, 255, 255, 0.95); /* Almost opaque white */
+    color: #333;
+    transition: all 0.3s ease; /* Smooth transition for focus */
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); /* Inner shadow */
+}
+
+#city-input:focus {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5); /* Blue glow on focus */
+}
+
+#city-input::placeholder {
+    color: #888;
+    opacity: 0.8; /* Slightly transparent placeholder */
+}
+
+#search-btn {
+    padding: 14px 30px; /* More padding */
+    border: none;
+    border-radius: 30px; /* More rounded */
+    background: linear-gradient(45deg, #007bff, #0056b3); /* Blue gradient button */
+    color: white;
+    font-size: 1.1em; /* Slightly larger font */
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease; /* Smooth transition for hover */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Button shadow */
+}
+
+#search-btn:hover {
+    background: linear-gradient(45deg, #0056b3, #003f8e); /* Darker gradient on hover */
+    transform: translateY(-2px); /* Slight lift effect */
+    box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+}
+
+#search-btn:active {
+    transform: translateY(0); /* Press effect */
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Weather Display Area */
+.weather-display {
+    margin-top: 25px; /* Increased margin */
+    min-height: 200px; /* Ensure space even when empty */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease-in-out; /* Smooth transition for content changes */
+}
+
+/* Specific Weather Info Elements */
+.weather-info {
+    width: 100%; /* Ensure it takes full width of parent */
+    animation: slideInUp 0.7s ease-out; /* Animation for weather info */
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-// Initial state: clear error message when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    errorMessage.style.display = 'none';
-});
+.city-name {
+    font-size: 2.5em; /* Larger city name */
+    margin-bottom: 12px;
+    font-weight: 600;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
 
-// Add Font Awesome for icons (optional, but good for visual detail)
-// You can put this link in your <head> section of index.html as well
-const fontAwesomeLink = document.createElement('link');
-fontAwesomeLink.rel = 'stylesheet';
-fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
-document.head.appendChild(fontAwesomeLink);
+.weather-icon {
+    width: 120px; /* Larger icon */
+    height: 120px;
+    margin-bottom: 10px;
+    filter: drop-shadow(2px 2px 5px rgba(0, 0, 0, 0.2)); /* Shadow for the icon */
+}
+
+.temperature {
+    font-size: 5em; /* Very large temperature */
+    font-weight: 700; /* Extra bold */
+    margin-bottom: 10px;
+    text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3); /* Stronger text shadow */
+}
+
+.description {
+    font-size: 1.8em; /* Larger description */
+    margin-bottom: 25px;
+    text-transform: capitalize; /* Capitalize first letter */
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Details Section (Humidity, Wind) */
+.details {
+    display: flex;
+    justify-content: space-around; /* Distribute items evenly */
+    width: 90%; /* Slightly less than full width */
+    margin: 25px auto 0; /* Center and add top margin */
+    flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+    gap: 15px; /* Space between detail items */
+}
+
+.detail-item {
+    background-color: rgba(255, 255, 255, 0.1); /* Lighter background for details */
+    padding: 15px 20px; /* More padding */
+    border-radius: 15px; /* Rounded corners */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px; /* Minimum width for detail items */
+    flex: 1; /* Allow items to grow and shrink */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease; /* Smooth hover effect */
+}
+
+.detail-item:hover {
+    transform: translateY(-5px); /* Lift effect on hover */
+}
+
+.detail-item i {
+    font-size: 1.8em; /* Larger icons */
+    margin-bottom: 8px;
+    color: #a7d9ff; /* Light blue color for icons */
+}
+
+.detail-item span {
+    font-size: 1.1em; /* Slightly larger text */
+    font-weight: 500;
+}
+
+/* Error and Initial Message Styling */
+.error-message {
+    color: #ffdddd;
+    background-color: rgba(255, 0, 0, 0.5); /* More visible red background */
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 25px;
+    display: none; /* Hidden by default, shown by JS */
+    font-size: 1.1em;
+    font-weight: 500;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    animation: shake 0.5s; /* Shake animation for errors */
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.initial-message {
+    font-size: 1.3em; /* Larger initial message */
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 300;
+}
+
+/* --- New Forecast Section Styling --- */
+.forecast-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: none; /* Hidden by default, shown when data is loaded */
+    animation: fadeIn 0.8s ease-out;
+}
+
+.forecast-section h2 {
+    font-size: 2em;
+    margin-bottom: 25px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.forecast-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* Allow cards to wrap to the next line */
+    gap: 15px; /* Space between forecast cards */
+}
+
+.forecast-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 15px 10px;
+    border-radius: 15px;
+    flex: 1; /* Allow cards to grow */
+    min-width: 120px; /* Minimum width for cards */
+    max-width: 150px; /* Max width for cards */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.forecast-card:hover {
+    transform: translateY(-5px);
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.forecast-card .day {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.forecast-card .forecast-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 5px;
+}
+
+.forecast-card .temp-range {
+    font-size: 1.1em;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.forecast-card .forecast-desc {
+    font-size: 0.9em;
+    text-transform: capitalize;
+    margin-bottom: 5px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.forecast-card .rain-chance {
+    font-size: 0.9em;
+    color: #a7d9ff; /* Light blue for rain chance */
+    font-weight: 500;
+}
+
+/* --- Rain Effect Styling --- */
+.rain-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Allows clicks to pass through */
+    z-index: 5; /* Below the weather app */
+    overflow: hidden; /* Ensure drops don't go outside */
+}
+
+.raindrop {
+    position: absolute;
+    background-color: rgba(175, 215, 255, 0.6); /* Semi-transparent blue */
+    width: 2px; /* Thin drops */
+    height: 20px; /* Length of drops */
+    border-radius: 50%; /* Rounded ends */
+    animation: fall linear infinite; /* Animation for falling */
+    opacity: 0; /* Hidden by default, shown by JS */
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-100px) translateX(0); /* Start above screen */
+        opacity: 0;
+    }
+    5% {
+        opacity: 1; /* Fade in quickly */
+    }
+    95% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(calc(100vh + 100px)) translateX(20px); /* Fall off screen, slight horizontal drift */
+        opacity: 0; /* Fade out at bottom */
+    }
+}
+
+
+/* Responsive Adjustments (Media Queries) */
+@media (max-width: 600px) {
+    .weather-app {
+        padding: 30px 20px; /* Adjust padding for smaller screens */
+        border-radius: 15px; /* Slightly less rounded */
+    }
+
+    h1 {
+        font-size: 2.2em; /* Smaller heading on mobile */
+        margin-bottom: 25px;
+    }
+
+    .search-box {
+        flex-direction: column; /* Stack input and button vertically */
+        align-items: center;
+        gap: 15px; /* More space when stacked */
+    }
+
+    #city-input {
+        width: 90%; /* Wider input on mobile */
+        font-size: 1em;
+        padding: 12px 18px;
+    }
+
+    #search-btn {
+        width: 90%; /* Wider button on mobile */
+        font-size: 1em;
+        padding: 12px 25px;
+    }
+
+    .city-name {
+        font-size: 2em; /* Smaller city name */
+    }
+
+    .weather-icon {
+        width: 100px; /* Slightly smaller icon */
+        height: 100px;
+    }
+
+    .temperature {
+        font-size: 4em; /* Smaller temperature on mobile */
+    }
+
+    .description {
+        font-size: 1.4em; /* Smaller description */
+    }
+
+    .details {
+        flex-direction: column; /* Stack detail items vertically */
+        gap: 12px; /* Space between stacked items */
+        width: 100%; /* Full width for stacked details */
+    }
+
+    .detail-item {
+        min-width: unset; /* Remove min-width when stacked */
+        width: 100%; /* Full width for stacked items */
+        padding: 12px 15px;
+    }
+
+    .detail-item i {
+        font-size: 1.5em; /* Adjust icon size */
+    }
+
+    .detail-item span {
+        font-size: 1em; /* Adjust text size */
+    }
+
+    .error-message {
+        font-size: 1em;
+        padding: 12px;
+    }
+
+    .initial-message {
+        font-size: 1.1em;
+    }
+
+    /* Forecast section responsive adjustments */
+    .forecast-section h2 {
+        font-size: 1.8em;
+    }
+
+    .forecast-container {
+        flex-direction: row; /* Keep row for smaller screens, but allow wrapping */
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .forecast-card {
+        min-width: 100px; /* Adjust min-width for smaller cards */
+        max-width: 120px; /* Adjust max-width for smaller cards */
+        padding: 10px 8px;
+    }
+
+    .forecast-card .day {
+        font-size: 1.1em;
+    }
+
+    .forecast-card .forecast-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .forecast-card .temp-range,
+    .forecast-card .forecast-desc,
+    .forecast-card .rain-chance {
+        font-size: 0.85em;
+    }
+}
+
+/* Even smaller screens (e.g., old iPhones SE) */
+@media (max-width: 400px) {
+    .weather-app {
+        padding: 25px 15px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    .temperature {
+        font-size: 3.5em;
+    }
+
+    .description {
+        font-size: 1.2em;
+    }
+
+    .forecast-card {
+        min-width: 80px; /* Even smaller cards */
+        max-width: 100px;
+        padding: 8px 5px;
+    }
+}
