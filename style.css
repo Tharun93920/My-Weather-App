@@ -292,7 +292,7 @@ h1 {
 
 .forecast-card .rain-chance {
     font-size: 0.9em;
-    color: #a7d9ff; /* Light blue for rain chance */
+    color: #000000; /* Black for rain chance */
     font-weight: 500;
 }
 
